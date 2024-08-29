@@ -5,9 +5,8 @@
 #include "include/ChoiceArray.hpp"
 #include "include/ItemArray.hpp"
 
-//Objective: Fix memory leaks that have been created by ListAllItems.
-//The current implementation leaks two chunks of heap memory - one when we allocate for a new ChoiceArray, and one when we allocate a new Choice. We need to fix these.
-//Bonus: Finish the tutorial dialogue and figure out how to make a generic set of dialogue tree nodes for exploring and interacting with the world (And your inventory, of course).
+// Objective: Finish the tutorial dialogue and figure out how to make a generic set of dialogue tree nodes
+// for exploring and interacting with the world (And your inventory, of course).
 
 
 //Choice::FuncSig bla = &DoThing; // pointer to DoThing that you can invoke
@@ -21,8 +20,16 @@ Item* itemArray = new Item[3] {
 int playerChoiceValue = 0;
 
 Inventory myInventory(itemArray, 3); // this line - direct initialisation
+Choice* endOfGameChoicePtr = nullptr;
+Choice* ptrToDelete = nullptr;
 Choice* currentChoice = nullptr;
 ChoiceArray* inventoryItemsArray = nullptr;
+
+void DeleteCurrentChoice()
+{
+    delete ptrToDelete;
+    currentChoice = endOfGameChoicePtr;
+}
 
 void ListAllItems()
 {
@@ -30,13 +37,13 @@ void ListAllItems()
 
     for (size_t i = 0; i < myInventory.GetArrayLength(); i++)
     {
-        itemChoices[i] = Choice(nullptr, 0, myInventory.GetItem(i).GetItemName(), myInventory.GetItem(i).GetItemDescription());
+        itemChoices[i] = Choice(nullptr, 0, myInventory.GetItem(i).GetItemName(), myInventory.GetItem(i).GetItemDescription(), &DeleteCurrentChoice);
     }
     
     inventoryItemsArray = new ChoiceArray(itemChoices);
 
-    currentChoice = new Choice(inventoryItemsArray, myInventory.GetArrayLength(), "", "Inventory:");
-
+    currentChoice = new Choice(inventoryItemsArray, myInventory.GetArrayLength(), "", "Inventory:", nullptr, true);
+    ptrToDelete = currentChoice;
     //size_t i = 0;
 
     //do
@@ -52,6 +59,15 @@ void ListAllItems()
  
 int main()
 {
+    // Hacky as hell, we should probably find a better way to do this
+    Choice* endOfGameChoice = new Choice[1] {
+        Choice(nullptr, 0, "Hey you reached the end of the game get fucked lmao", "")
+    };
+
+    endOfGameChoicePtr = endOfGameChoice;
+
+    ChoiceArray endOfGameChoiceArray(endOfGameChoice);
+
     Choice* tutorialTwo = new Choice[1] {
         Choice(nullptr, 0, "List inventory items.", "", &ListAllItems)
     };
@@ -129,6 +145,8 @@ int main()
                         std::cout << "I am not programmed to understand what any of what you said means. It's a miracle I'm even talking to you. Please help me understand by picking something that I am programmed to understand.\n";
                     }
                 }
+
+                std::cout << currentChoice->GetChoiceText() << "\n"; // TODO: This is calling the wrong thing. I Think I put the text in the wrong place but also its nearly 3 AM. sue me.
 
                 break;
             }

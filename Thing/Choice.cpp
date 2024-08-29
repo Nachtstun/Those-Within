@@ -2,20 +2,25 @@
 #include "include/ChoiceArray.hpp"
 #include <stdexcept>
 
-Choice::Choice(ChoiceArray* optionArray, size_t arrayLength, std::string choiceText, std::string responseText, FuncSig customActionFnPtr)
+Choice::Choice(ChoiceArray* optionArray, size_t arrayLength, std::string choiceText, std::string responseText, FuncSig customActionFnPtr, bool shouldManageOptionArrayLifetime)
 {
     _optionArray = optionArray; // pass the pointer along to ourselves for future use
     _arrayLength = arrayLength; // length of the array. We can use this to validate index-based access.
     _choiceText = choiceText;
     _responseText = responseText;
     _customActionFnPtr = customActionFnPtr;
+    _shouldManageOptionArrayLifetime = shouldManageOptionArrayLifetime;
 }
 
+Choice::~Choice()
+{
+    if (!_shouldManageOptionArrayLifetime)
+    {
+        return; // don't do anything
+    }
 
-//Choice::~Choice()
-//{
-    //delete[] _optionArray; // clean up, or we get a memory leak
-//}
+    delete _optionArray; // clean up, or we get a memory leak
+}
 
 Choice& Choice::GetChoice(size_t index)
 {
